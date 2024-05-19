@@ -16,8 +16,8 @@ import javax.inject.Inject
 class MetronomeViewModel @Inject constructor(private val repository: MetronomeRepository) : ViewModel() {
 
     private val _metronome = MutableStateFlow<MetronomeModel>(MetronomeModel(60,
-                                                                                BeatsEnum.FOUR.value,
-                                                                                SubdivisionEnum.ONE.value
+                                                                                BeatsEnum.FOUR,
+                                                                                SubdivisionEnum.ONE
                                                                             )
                                                              )
     val metronome: StateFlow<MetronomeModel> = _metronome
@@ -33,11 +33,11 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
         saveMetronome()
     }
 
-    fun updateBeats(newBeats: Int) {
+    fun updateBeats(newBeats: BeatsEnum) {
         _metronome.value = _metronome.value.copy(beats = newBeats)
     }
 
-    fun updateSubdivision(newSubdivision: Int) {
+    fun updateSubdivision(newSubdivision: SubdivisionEnum) {
         _metronome.value = _metronome.value.copy(subdivision = newSubdivision)
     }
 

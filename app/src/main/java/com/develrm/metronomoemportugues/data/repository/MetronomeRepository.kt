@@ -25,8 +25,8 @@ class MetronomeRepository(@ApplicationContext context: Context) {
         } else {
             MetronomeModel(
                 bpm = 60,
-                beats = BeatsEnum.FOUR.value,
-                subdivision = SubdivisionEnum.ONE.value
+                beats = BeatsEnum.FOUR,
+                subdivision = SubdivisionEnum.ONE
             )
         }
     }
