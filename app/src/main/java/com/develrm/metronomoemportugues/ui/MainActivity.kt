@@ -23,6 +23,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -31,14 +33,13 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.develrm.metronomoemportugues.ui.theme.MetronomoEmPortuguesTheme
 import com.develrm.metronomoemportugues.viewmodel.MetronomeViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    val viewModel: MetronomeViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
                     Column(modifier = Modifier
                         .fillMaxWidth()) {
                         Lights()
-                        Slider(viewModel)
+                        Slider()
                         Buttons()
                     }
                 }
@@ -61,22 +62,22 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Slider(viewModel: MetronomeViewModel) {
-    val bpmValue = remember { mutableStateOf(0f) }
-
+fun Slider() {
+    val viewModel: MetronomeViewModel = hiltViewModel()
+    val metronome by viewModel.metronome.collectAsState()
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)) {
-        Text(text = "BPM: ${bpmValue.value.toInt()}",
+        Text(text = "BPM: ${metronome.bpm}",
              color = Color.White,
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth())
 
         Slider(
-            value = bpmValue.value,
+            value = metronome.bpm.toFloat(),
             onValueChange = { newValue ->
-                bpmValue.value = newValue
+                viewModel.updateBpm(newValue.toInt())
             },
             valueRange = 20f..120f,
             modifier = Modifier.fillMaxWidth()

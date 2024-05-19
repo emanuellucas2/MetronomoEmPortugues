@@ -6,11 +6,14 @@ import com.develrm.metronomoemportugues.data.model.MetronomeModel
 import com.develrm.metronomoemportugues.data.model.enum.BeatsEnum
 import com.develrm.metronomoemportugues.data.model.enum.SubdivisionEnum
 import com.develrm.metronomoemportugues.data.repository.MetronomeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MetronomeViewModel(private val repository: MetronomeRepository) : ViewModel() {
+@HiltViewModel
+class MetronomeViewModel @Inject constructor(private val repository: MetronomeRepository) : ViewModel() {
 
     private val _metronome = MutableStateFlow<MetronomeModel>(MetronomeModel(60,
                                                                                 BeatsEnum.FOUR.value,
