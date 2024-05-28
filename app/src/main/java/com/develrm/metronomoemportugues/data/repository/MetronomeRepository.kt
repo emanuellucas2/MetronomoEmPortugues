@@ -23,11 +23,7 @@ class MetronomeRepository(@ApplicationContext context: Context) {
         return if (json != null) {
             gson.fromJson(json, MetronomeModel::class.java)
         } else {
-            MetronomeModel(
-                bpm = 60,
-                beats = BeatsEnum.FOUR,
-                subdivision = SubdivisionEnum.ONE
-            )
+            MetronomeModel()
         }
     }
 
