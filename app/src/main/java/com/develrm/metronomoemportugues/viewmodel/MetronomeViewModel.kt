@@ -1,12 +1,16 @@
 package com.develrm.metronomoemportugues.viewmodel
 
+import android.content.Context
+import android.media.MediaPlayer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.develrm.metronomoemportugues.R
 import com.develrm.metronomoemportugues.data.model.MetronomeModel
 import com.develrm.metronomoemportugues.data.model.enum.BeatsEnum
 import com.develrm.metronomoemportugues.data.model.enum.SubdivisionEnum
 import com.develrm.metronomoemportugues.data.repository.MetronomeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +19,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MetronomeViewModel @Inject constructor(private val repository: MetronomeRepository) : ViewModel() {
+class MetronomeViewModel @Inject constructor(private val repository: MetronomeRepository,@ApplicationContext private val context: Context) : ViewModel() {
     private var metronomeJob: Job? = null
     private val _metronome = MutableStateFlow(MetronomeModel())
+
     val metronome: StateFlow<MetronomeModel> = _metronome
+
+    private var mediaPlayer: MediaPlayer? = null
 
     init {
         _metronome.value = repository.getMetronome()
@@ -32,7 +39,18 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
     }
 
     private fun emitSound() {
-        // Implementar a lógica para emitir o som
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer.create(context, R.raw.tick)
+            mediaPlayer?.setOnCompletionListener {
+                stopSound()
+            }
+        }
+        mediaPlayer?.start()
+    }
+
+    private fun stopSound() {
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 
     fun updateBpm(newBpm: Int) {
@@ -67,6 +85,7 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
                 }
             }
         }else{
+            stopSound()
             metronomeJob?.cancel()
         }
     }
