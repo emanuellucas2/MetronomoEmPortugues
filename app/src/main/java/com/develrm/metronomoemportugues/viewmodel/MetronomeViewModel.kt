@@ -1,16 +1,15 @@
 package com.develrm.metronomoemportugues.viewmodel
 
-import android.content.Context
-import android.media.MediaPlayer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.develrm.metronomoemportugues.R
 import com.develrm.metronomoemportugues.data.model.MetronomeModel
+import com.develrm.metronomoemportugues.data.model.StateModel
 import com.develrm.metronomoemportugues.data.model.enum.BeatsEnum
 import com.develrm.metronomoemportugues.data.model.enum.SubdivisionEnum
 import com.develrm.metronomoemportugues.data.repository.MetronomeRepository
+import com.develrm.metronomoemportugues.util.MediaUtil
+import com.develrm.metronomoemportugues.util.calculateInterval
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,38 +18,53 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MetronomeViewModel @Inject constructor(private val repository: MetronomeRepository,@ApplicationContext private val context: Context) : ViewModel() {
-    private var metronomeJob: Job? = null
-    private val _metronome = MutableStateFlow(MetronomeModel())
+class MetronomeViewModel @Inject constructor(private val repository: MetronomeRepository, private val mediaUtil: MediaUtil) : ViewModel() {
 
+    private val _metronome = MutableStateFlow(MetronomeModel())
     val metronome: StateFlow<MetronomeModel> = _metronome
 
-    private var mediaPlayer: MediaPlayer? = null
+    private val _state = MutableStateFlow(StateModel())
+    val state: StateFlow<StateModel> = _state
 
+    private var metronomeJob: Job? = null
+    private var tickCount = 0
     init {
         _metronome.value = repository.getMetronome()
-        _metronome.value.copy(isExecuting = false, redCircle = -1)
     }
 
-    private fun calculateInterval(): Long {
-        val bpm = _metronome.value.bpm
-        val subdivision = _metronome.value.subdivision.value
-        return (1000 / ((bpm * subdivision ) / 60.0)).toLong()
-    }
+    fun toggleMetronome(){
+        val isExecuting = _state.value.isExecuting
+        _state.value = state.value.copy(isExecuting = !isExecuting, beat = -1)
 
-    private fun emitSound() {
-        if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer.create(context, R.raw.tick)
-            mediaPlayer?.setOnCompletionListener {
-                stopSound()
+        if(!isExecuting){
+            metronomeJob = viewModelScope.launch {
+                while (true) {
+                    mediaUtil.emitVoiceSound(_metronome.value.subdivision,
+                                             _metronome.value.beats.value,
+                                             _state.value.beat)
+                    tickCount++
+                    if (tickCount % _metronome.value.subdivision.value == 0) {
+                        updateBeat()
+                        mediaUtil.emitTickSound()
+                    }
+                    delay(calculateInterval(_metronome.value.bpm,_metronome.value.subdivision.value))
+                }
             }
+        }else{
+            mediaUtil.stopVoiceSound()
+            mediaUtil.stopTickSound()
+            metronomeJob?.cancel()
         }
-        mediaPlayer?.start()
     }
 
-    private fun stopSound() {
-        mediaPlayer?.release()
-        mediaPlayer = null
+    private fun updateBeat() {
+        _state.value = _state.value.copy(beat = ((_state.value.beat + 1) % _metronome.value.beats.value))
+    }
+
+    private fun saveMetronome() {
+        viewModelScope.launch {
+            repository.saveMetronome(_metronome.value)
+        }
     }
 
     fun updateBpm(newBpm: Int) {
@@ -66,38 +80,5 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
     fun updateSubdivision(newSubdivision: SubdivisionEnum) {
         _metronome.value = _metronome.value.copy(subdivision = newSubdivision)
         saveMetronome()
-    }
-
-    fun toggleMetronome(){
-        val isExecuting = _metronome.value.isExecuting
-        _metronome.value = _metronome.value.copy(isExecuting = !isExecuting, redCircle = -1)
-
-        if(!isExecuting){
-            var tickCount = 0
-            metronomeJob = viewModelScope.launch {
-                while (true) {
-                    emitSound()
-                    tickCount++
-                    if (tickCount % _metronome.value.subdivision.value == 0) {
-                        updateRedCircle()
-                    }
-                    delay(calculateInterval())
-                }
-            }
-        }else{
-            stopSound()
-            metronomeJob?.cancel()
-        }
-    }
-
-    private fun updateRedCircle() {
-        _metronome.value = _metronome.value.copy(redCircle = ((_metronome.value.redCircle + 1) % _metronome.value.beats.value))
-    }
-
-
-    private fun saveMetronome() {
-        viewModelScope.launch {
-            repository.saveMetronome(_metronome.value)
-        }
     }
 }

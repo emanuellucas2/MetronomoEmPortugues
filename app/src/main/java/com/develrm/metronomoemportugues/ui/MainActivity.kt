@@ -89,6 +89,7 @@ fun Slider() {
 @Composable
 fun Lights() {
     val viewModel: MetronomeViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsState()
     val metronome by viewModel.metronome.collectAsState()
 
     Row(
@@ -98,7 +99,7 @@ fun Lights() {
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         for (i in 0 until metronome.beats.value) {
-            Circle(i == metronome.redCircle && metronome.isExecuting)
+            Circle(i == state.beat && state.isExecuting)
         }
     }
 }
@@ -117,6 +118,8 @@ fun Circle( isRed: Boolean) {
 fun Buttons() {
     val viewModel: MetronomeViewModel = hiltViewModel()
     val metronome by viewModel.metronome.collectAsState()
+    val state by viewModel.state.collectAsState()
+
     Column(modifier = Modifier
         .fillMaxWidth()) {
         Row (modifier = Modifier
@@ -129,7 +132,7 @@ fun Buttons() {
                     .height(100.dp),
                 shape = RectangleShape) {
                 IconActionButton(
-                    iconResourceId = if(metronome.isExecuting) R.drawable.stop else R.drawable.play
+                    iconResourceId = if(state.isExecuting) R.drawable.stop else R.drawable.play
                 ) {
                     viewModel.toggleMetronome()
                 }
