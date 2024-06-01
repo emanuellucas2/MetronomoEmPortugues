@@ -55,8 +55,6 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
                 }
             }
         }else{
-            mediaUtil.stopVoiceSound()
-            mediaUtil.stopTickSound()
             metronomeJob?.cancel()
         }
     }

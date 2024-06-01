@@ -10,16 +10,33 @@ import javax.inject.Singleton
 @Singleton
 class MediaUtil(@ApplicationContext private val context: Context) {
 
-    private var tickMediaPlayer: MediaPlayer? = null
-    private var voiceMediaPlayer: MediaPlayer? = null
-    fun emitTickSound() {
-        if (tickMediaPlayer == null) {
-            tickMediaPlayer = MediaPlayer.create(context, R.raw.tick)
-            tickMediaPlayer?.setOnCompletionListener {
-                stopTickSound()
-            }
+    private val mediaPlayerPool = mutableListOf<MediaPlayer?>()
+    private val maxPoolSize = 4
+
+    init {
+        repeat(maxPoolSize) { mediaPlayerPool.add(null) }
+    }
+
+    private fun acquireMediaPlayer(sound : Int): MediaPlayer {
+        val availablePlayer = mediaPlayerPool.indexOfFirst { it == null }
+        return if (availablePlayer != -1) {
+            val mediaPlayer = MediaPlayer.create(context,sound)
+            mediaPlayerPool[availablePlayer] = mediaPlayer
+            mediaPlayer
+        } else {
+            throw IllegalStateException("MediaPlayer pool is full.")
         }
-        tickMediaPlayer?.start()
+    }
+
+    private fun releaseMediaPlayer(mediaPlayer: MediaPlayer) {
+        mediaPlayer.release()
+        val index = mediaPlayerPool.indexOf(mediaPlayer)
+        if (index != -1) {
+            mediaPlayerPool[index] = null
+        }
+    }
+    fun emitTickSound() {
+        playSound(R.raw.tick)
     }
 
     fun emitVoiceSound(
@@ -28,22 +45,14 @@ class MediaUtil(@ApplicationContext private val context: Context) {
         tick: Int,
         subdivisionBeat: Int
     ) {
-        val sound = chooseSound(subdivision,beats,tick,subdivisionBeat)
-        if (voiceMediaPlayer == null && sound != 0) {
-            voiceMediaPlayer = MediaPlayer.create(context, sound)
-            voiceMediaPlayer?.setOnCompletionListener {
-                stopVoiceSound()
-            }
-        }
-        voiceMediaPlayer?.start()
-    }
-    fun stopTickSound() {
-        tickMediaPlayer?.release()
-        tickMediaPlayer = null
+        playSound(chooseSound(subdivision,beats,tick,subdivisionBeat))
     }
 
-    fun stopVoiceSound() {
-        voiceMediaPlayer?.release()
-        voiceMediaPlayer = null
+    private fun playSound(soundResourceId: Int) {
+        val mediaPlayer = acquireMediaPlayer(soundResourceId)
+        mediaPlayer.setOnCompletionListener {
+            releaseMediaPlayer(mediaPlayer)
+        }
+        mediaPlayer.start()
     }
 }
