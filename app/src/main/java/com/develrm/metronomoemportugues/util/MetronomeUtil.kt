@@ -6,11 +6,11 @@ import com.develrm.metronomoemportugues.data.model.enum.SubdivisionEnum
 fun calculateInterval(bpm : Int, subdivision: Int): Long {
     return (1000 / ((bpm * subdivision ) / 60.0)).toLong()
 }
-fun chooseSound(subdivision : SubdivisionEnum,beats: Int, tick: Int): Int {
+fun chooseSound(subdivision: SubdivisionEnum, beats: Int, tick: Int, subdivisionBeat: Int): Int {
     return when (subdivision) {
         SubdivisionEnum.ONE -> beatSound(beats,tick)
-        SubdivisionEnum.TWO -> if (tick % 2 == 0) beatSound(beats,tick) else R.raw.i
-        SubdivisionEnum.FOUR -> when (tick % 4) {
+        SubdivisionEnum.TWO -> if (subdivisionBeat % 2 == 0) beatSound(beats,tick) else R.raw.i
+        SubdivisionEnum.FOUR -> when (subdivisionBeat % 4) {
             0 -> beatSound(beats,tick)
             1 -> R.raw.i
             2 -> R.raw.e

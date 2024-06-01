@@ -12,7 +12,7 @@ class MediaUtil(@ApplicationContext private val context: Context) {
 
     private var tickMediaPlayer: MediaPlayer? = null
     private var voiceMediaPlayer: MediaPlayer? = null
-    public fun emitTickSound() {
+    fun emitTickSound() {
         if (tickMediaPlayer == null) {
             tickMediaPlayer = MediaPlayer.create(context, R.raw.tick)
             tickMediaPlayer?.setOnCompletionListener {
@@ -22,8 +22,13 @@ class MediaUtil(@ApplicationContext private val context: Context) {
         tickMediaPlayer?.start()
     }
 
-    public fun emitVoiceSound(subdivision: SubdivisionEnum, beats:Int, tick:Int) {
-        val sound = chooseSound(subdivision,beats,tick)
+    fun emitVoiceSound(
+        subdivision: SubdivisionEnum,
+        beats: Int,
+        tick: Int,
+        subdivisionBeat: Int
+    ) {
+        val sound = chooseSound(subdivision,beats,tick,subdivisionBeat)
         if (voiceMediaPlayer == null && sound != 0) {
             voiceMediaPlayer = MediaPlayer.create(context, sound)
             voiceMediaPlayer?.setOnCompletionListener {
@@ -32,12 +37,12 @@ class MediaUtil(@ApplicationContext private val context: Context) {
         }
         voiceMediaPlayer?.start()
     }
-    public fun stopTickSound() {
+    fun stopTickSound() {
         tickMediaPlayer?.release()
         tickMediaPlayer = null
     }
 
-    public fun stopVoiceSound() {
+    fun stopVoiceSound() {
         voiceMediaPlayer?.release()
         voiceMediaPlayer = null
     }

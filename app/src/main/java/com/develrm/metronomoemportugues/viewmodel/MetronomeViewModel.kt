@@ -39,11 +39,15 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
         if(!isExecuting){
             metronomeJob = viewModelScope.launch {
                 while (true) {
+                    _state.value = state.value.copy(subdivisionBeat = ++tickCount % _metronome.value.subdivision.value)
+
                     mediaUtil.emitVoiceSound(_metronome.value.subdivision,
                                              _metronome.value.beats.value,
-                                             _state.value.beat)
-                    tickCount++
-                    if (tickCount % _metronome.value.subdivision.value == 0) {
+                                             _state.value.beat,
+                                             _state.value.subdivisionBeat)
+
+
+                    if (_state.value.subdivisionBeat == 0) {
                         updateBeat()
                         mediaUtil.emitTickSound()
                     }
