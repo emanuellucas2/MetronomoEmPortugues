@@ -33,25 +33,34 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
     }
 
     fun toggleMetronome(){
-        val isExecuting = _state.value.isExecuting
+        val isExecuting = state.value.isExecuting
         _state.value = state.value.copy(isExecuting = !isExecuting, beat = -1)
 
         if(!isExecuting){
             metronomeJob = viewModelScope.launch {
                 while (true) {
-                    _state.value = state.value.copy(subdivisionBeat = ++tickCount % _metronome.value.subdivision.value)
+                    _state.value = state.value.copy(subdivisionBeat = ++tickCount % metronome.value.subdivision.value)
 
-                    mediaUtil.emitVoiceSound(_metronome.value.subdivision,
-                                             _metronome.value.beats.value,
-                                             _state.value.beat,
-                                             _state.value.subdivisionBeat)
+                    if(state.value.isPlayingVoice){
 
+                        mediaUtil.emitVoiceSound(metronome.value.subdivision,
+                            metronome.value.beats.value,
+                            state.value.beat,
+                            state.value.subdivisionBeat)
 
-                    if (_state.value.subdivisionBeat == 0) {
-                        updateBeat()
-                        mediaUtil.emitTickSound()
                     }
-                    delay(calculateInterval(_metronome.value.bpm,_metronome.value.subdivision.value))
+
+                    if (state.value.subdivisionBeat == 0) {
+
+                        updateBeat()
+
+                        if (state.value.isPlayingTick){
+                            mediaUtil.emitTickSound()
+                        }
+
+                    }
+
+                    delay(calculateInterval(metronome.value.bpm,metronome.value.subdivision.value))
                 }
             }
         }else{
@@ -60,27 +69,27 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
     }
 
     private fun updateBeat() {
-        _state.value = _state.value.copy(beat = ((_state.value.beat + 1) % _metronome.value.beats.value))
+        _state.value = state.value.copy(beat = ((state.value.beat + 1) % _metronome.value.beats.value))
     }
 
     private fun saveMetronome() {
         viewModelScope.launch {
-            repository.saveMetronome(_metronome.value)
+            repository.saveMetronome(metronome.value)
         }
     }
 
     fun updateBpm(newBpm: Int) {
-        _metronome.value = _metronome.value.copy(bpm = newBpm)
+        _metronome.value = metronome.value.copy(bpm = newBpm)
         saveMetronome()
     }
 
     fun updateBeats(newBeats: BeatsEnum) {
-        _metronome.value = _metronome.value.copy(beats = newBeats)
+        _metronome.value = metronome.value.copy(beats = newBeats)
         saveMetronome()
     }
 
     fun updateSubdivision(newSubdivision: SubdivisionEnum) {
-        _metronome.value = _metronome.value.copy(subdivision = newSubdivision)
+        _metronome.value = metronome.value.copy(subdivision = newSubdivision)
         saveMetronome()
     }
 }
