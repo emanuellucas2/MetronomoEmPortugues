@@ -68,6 +68,13 @@ class MetronomeViewModel @Inject constructor(private val repository: MetronomeRe
         }
     }
 
+    fun toggleVoice(){
+        _state.value = state.value.copy(isPlayingVoice = !state.value.isPlayingVoice)
+    }
+    fun toggleTick(){
+        _state.value = state.value.copy(isPlayingTick = !state.value.isPlayingTick)
+    }
+
     private fun updateBeat() {
         _state.value = state.value.copy(beat = ((state.value.beat + 1) % _metronome.value.beats.value))
     }

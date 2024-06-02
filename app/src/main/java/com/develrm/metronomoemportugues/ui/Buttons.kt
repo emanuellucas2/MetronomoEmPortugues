@@ -52,6 +52,41 @@ fun Buttons() {
             horizontalArrangement = Arrangement.SpaceEvenly){
 
             Button(onClick = {
+                viewModel.toggleTick()
+            },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(100.dp),
+                shape = RectangleShape
+            ) {
+                IconActionButton(
+                    iconResourceId = if(state.isPlayingTick) R.drawable.tick_on else R.drawable.tick_off
+                ) {
+                    viewModel.toggleTick()
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = {
+                viewModel.toggleVoice()
+            },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(100.dp),
+                shape = RectangleShape
+            ) {
+                IconActionButton(
+                    iconResourceId = if(state.isPlayingVoice) R.drawable.voice_on else R.drawable.voice_off
+                ) {
+                    viewModel.toggleVoice()
+                }
+            }
+        }
+        Row (modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly){
+
+            Button(onClick = {
                 viewModel.updateBeats(metronome.beats.next())
             },
                 modifier = Modifier
